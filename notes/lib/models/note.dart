@@ -4,6 +4,8 @@ class Note {
   String? id;
   final String title;
   final String description;
+  String? imageUrl;
+
   Timestamp? createdAt;
   Timestamp? updatedAt;
 
@@ -11,6 +13,7 @@ class Note {
     this.id,
     required this.title,
     required this.description,
+    this.imageUrl,
     this.createdAt,
     this.updatedAt,
   });
@@ -21,6 +24,7 @@ class Note {
       id: doc.id,
       title: data['title'],
       description: data['description'],
+      imageUrl: data['image_url'],
       createdAt: data['created_at'] as Timestamp,
       updatedAt: data['updated_at'] as Timestamp,
     );
@@ -32,6 +36,7 @@ class Note {
       'description': description,
       'created_at': createdAt,
       'updated_at': updatedAt,
+      'image_url' : imageUrl,
     };
   }
 }
