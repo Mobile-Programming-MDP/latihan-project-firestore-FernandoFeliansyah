@@ -3,7 +3,9 @@ import 'package:notes/models/note.dart';
 import 'package:notes/screens/google_maps_screen.dart';
 import 'package:notes/services/note_service.dart';
 import 'package:notes/widgets/note_dialog.dart';
-import 'package:path/path.dart';
+import 'package:notes/widgets/theme.dart';
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NoteListScreen extends StatefulWidget {
@@ -19,6 +21,16 @@ class _NoteListScreenState extends State<NoteListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notes'),
+        actions: [
+          IconButton(
+            icon: Icon(Provider.of<ThemeProvider>(context).isDarkMode
+                ? Icons.light_mode
+                : Icons.dark_mode),
+            onPressed: () {
+              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+            },
+          ),
+        ],
       ),
       body: const NoteList(),
       floatingActionButton: FloatingActionButton(
@@ -40,6 +52,11 @@ class _NoteListScreenState extends State<NoteListScreen> {
 class NoteList extends StatelessWidget {
   const NoteList({super.key});
 
+  void _shareContent(Note document) {
+    Share.share(
+        'Check out my note: ${document.title}\n${document.description}');
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -60,22 +77,21 @@ class NoteList extends StatelessWidget {
                 return Card(
                   child: Column(
                     children: [
-                      document.imageUrl != null &&
-                              Uri.parse(document.imageUrl!).isAbsolute
-                          ? ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                topRight: Radius.circular(16),
-                              ),
-                              child: Image.network(
-                                document.imageUrl!,
-                                width: double.infinity,
-                                height: 500,
-                                fit: BoxFit.fill,
-                                alignment: Alignment.center,
-                              ),
-                            )
-                          : Container(),
+                      if (document.imageUrl != null &&
+                          Uri.parse(document.imageUrl!).isAbsolute)
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
+                          ),
+                          child: Image.network(
+                            document.imageUrl!,
+                            width: double.infinity,
+                            height: 500,
+                            fit: BoxFit.cover,
+                            alignment: Alignment.center,
+                          ),
+                        ),
                       ListTile(
                         onTap: () {
                           showDialog(
@@ -90,6 +106,23 @@ class NoteList extends StatelessWidget {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            InkWell(
+                              onTap: () {
+                                String shareText =
+                                    "Check out this note: " + "\n" +
+                                    "\nTitle : ${document.title}" + "\n" +
+                                    "\nDescription : ${document.description}"+ "\n"; 
+                                if (document.imageUrl != null) {
+                                  shareText += "\nImage: ${document.imageUrl}";
+                                }
+                                Share.share(shareText);
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Icon(Icons.share),
+                              ),
+                            ),
+                            const SizedBox(),
                             InkWell(
                               onTap: () async {
                                 Navigator.push(
@@ -135,7 +168,7 @@ class NoteList extends StatelessWidget {
     }
   }
 
-  showAlertDialog(BuildContext context, Note document) {
+  void showAlertDialog(BuildContext context, Note document) {
     // set up the buttons
     Widget cancelButton = ElevatedButton(
       child: const Text("No"),
